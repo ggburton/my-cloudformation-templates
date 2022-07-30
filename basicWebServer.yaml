@@ -52,3 +52,12 @@ Resources:
           FromPort: "80"
           ToPort: "80"
           CidrIp: "0.0.0.0/0"
+  WebServerDNSRecord:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      HostedZoneId: Z02727593R7JTW56U72SQ
+      Name: web.cmcloudlab1775.info
+      ResourceRecords:
+      - !GetAtt EC2WebServer.PublicIp
+      TTL: 900
+      Type: A
