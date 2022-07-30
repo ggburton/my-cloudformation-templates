@@ -1,0 +1,54 @@
+Mappings:
+  InstanceRegionMap:
+    us-east-1:
+      AMI: ami-0cff7528ff583bf9a 
+    us-east-2:
+      AMI: ami-02d1e544b84bf7502 
+    us-west-1:
+      AMI: ami-0d9858aa3c6322f73 
+    us-west-2:
+      AMI: ami-098e42ae54c764c35
+
+Resources: 
+  EC2WebServer:
+    Type: "AWS::EC2::Instance"
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            yum:
+              httpd: []
+          services:
+            sysvinit:
+              httpd:
+                enabled: true 
+                ensureRunning: true
+    Properties:
+      ImageId:
+        Fn::FindInMap:
+        - InstanceRegionMap
+        - !Ref AWS::Region 
+        - AMI 
+      InstanceType: "t3.micro"
+      KeyName: "TestKey"
+      SecurityGroups:
+        - !Ref WebSecurityGroup
+      UserData:
+        Fn::Base64: 
+          !Sub |
+            #!/bin/bash -xe
+            yum install -y aws-cfn-bootstrap 
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2WebServer --region ${AWS::Region}
+  WebSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "SSH and HTTP access"
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
