@@ -11,3 +11,6 @@ A Minimal deployment that creates a web server.... no HTTPS at this stage.
 
 This will eventually setup a 2 tier database lab for testing
 
+At the moment it only create a VPC, a private subnet and a public subnet.
+
+It then creates an internet gateway and connects it to the VPC.
