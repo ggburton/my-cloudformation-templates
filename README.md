@@ -7,3 +7,7 @@ These AWS Cloudformation templates are things I've been building to better under
 A Minimal deployment that creates a web server.... no HTTPS at this stage.
 
 
+## 2. basicRDSsetup.yaml
+
+This will eventually setup a 2 tier database lab for testing
+

@@ -1,0 +1,31 @@
+Resources:
+  DatabaseVPC:
+    Type: AWS::EC2::VPC
+    Properties: 
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: "true"
+      EnableDnsHostnames: "true"
+      Tags:
+        - Key: stack
+          Value: database-test
+  DatabasePublicSubnet:
+    Type: AWS::EC2::Subnet 
+    Properties:
+      VpcId: !GetAtt DatabaseVPC.VpcId
+      CidrBlock: "10.0.0.0/24"
+  DatabasePrivateSubnet:
+    Type: AWS::EC2::Subnet 
+    Properties: 
+      VpcId: !GetAtt DatabaseVPC.VpcId 
+      CidrBlock: "10.0.1.0/24"
+  DatabaseIGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: stack 
+          Value: database-test
+  DatabaseGatewayAttachement:
+    Type: AWS::EC2::VPCGatewayAttachment 
+    Properties:
+      InternetGatewayId: !GetAtt DatabaseIGW.InternetGatewayId 
+      VpcId: !GetAtt DatabaseVPC.VpcId
