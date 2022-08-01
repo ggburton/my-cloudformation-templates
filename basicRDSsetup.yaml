@@ -1,5 +1,5 @@
 Resources:
-  DatabaseVPC:
+  DbVPC:
     Type: AWS::EC2::VPC
     Properties: 
       CidrBlock: "10.0.0.0/16"
@@ -7,67 +7,138 @@ Resources:
       EnableDnsHostnames: "true"
       Tags:
         - Key: stack
-          Value: db-stack
-  DatabasePublicSubnet:
+          Value: Db-stack
+        - Key: Name 
+          Value: "DB-VPC"
+  DbPublicSubnet1:
     Type: AWS::EC2::Subnet 
     Properties:
-      VpcId: !GetAtt DatabaseVPC.VpcId
+      VpcId: !GetAtt DbVPC.VpcId
       CidrBlock: "10.0.0.0/24"
+      AvailabilityZone: 'us-east-1a'
       Tags:
         - Key: Name 
-          Value: "Public Database 10.0.0.0/24"
+          Value: "Public Db 10.0.0.0/24"
         - Key: stack 
-          Value: db-stack
-  DatabasePrivateSubnet:
+          Value: Db-stack
+  DbPublicSubnet2:
+    Type: AWS::EC2::Subnet 
+    Properties:
+      VpcId: !GetAtt DbVPC.VpcId
+      CidrBlock: "10.0.2.0/24"
+      AvailabilityZone: 'us-east-1b'
+      Tags:
+        - Key: Name 
+          Value: "Public Db 10.0.2.0/24"
+        - Key: stack 
+          Value: Db-stack
+  DbPrivateSubnet1:
     Type: AWS::EC2::Subnet 
     Properties: 
-      VpcId: !GetAtt DatabaseVPC.VpcId 
+      VpcId: !GetAtt DbVPC.VpcId 
       CidrBlock: "10.0.1.0/24"
+      AvailabilityZone: 'us-east-1a'
       MapPublicIpOnLaunch: 'true'
       Tags:
         - Key: Name
-          Value: "Private Database 10.0.1.0/24"
+          Value: "Private Db 10.0.1.0/24"
         - Key: stack 
-          Value: db-stack 
-  DatabaseIGW:
+          Value: Db-stack
+  DbPrivateSubnet2:
+    Type: AWS::EC2::Subnet 
+    Properties: 
+      VpcId: !GetAtt DbVPC.VpcId 
+      CidrBlock: "10.0.3.0/24"
+      AvailabilityZone: 'us-east-1b'
+      MapPublicIpOnLaunch: 'true'
+      Tags:
+        - Key: Name
+          Value: "Private Db 10.0.3.0/24"
+        - Key: stack 
+          Value: Db-stack 
+  DbIGW:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: stack 
-          Value: db-stack
+          Value: Db-stack
         - Key: Name 
-          Value: Database-IGW
-  DatabaseGatewayAttachement:
+          Value: Db-IGW
+  DbGatewayAttachement:
     Type: AWS::EC2::VPCGatewayAttachment 
     Properties:
-      InternetGatewayId: !GetAtt DatabaseIGW.InternetGatewayId 
-      VpcId: !GetAtt DatabaseVPC.VpcId
-  DatabaseRouteTable:
+      InternetGatewayId: !GetAtt DbIGW.InternetGatewayId 
+      VpcId: !GetAtt DbVPC.VpcId
+  DbPublicRouteTable:
     Type: AWS::EC2::RouteTable 
     Properties:
-      VpcId: !GetAtt DatabaseVPC.VpcId
+      VpcId: !GetAtt DbVPC.VpcId
       Tags:
         - Key: Name 
-          Value: Database-RouteTable 
+          Value: DbPublicRouteTable 
         - Key: stack 
-          Value: db-stack 
-  DatabasePublicRoute:
+          Value: Db-stack
+  DbPrivateRouteTable:
+    Type: AWS::EC2::RouteTable 
+    Properties: 
+      VpcId: !Ref DbVPC
+      Tags:
+        - Key: Name 
+          Value: DbPrivateRouteTable 
+        - Key: stack 
+          Value: Db-stack 
+  DbPublicRoute:
     Type: AWS::EC2::Route 
     Properties:
-      RouteTableId: !GetAtt DatabaseRouteTable.RouteTableId
+      RouteTableId: !GetAtt DbPublicRouteTable.RouteTableId
       DestinationCidrBlock: "0.0.0.0/0"
-      GatewayId: !GetAtt DatabaseIGW.InternetGatewayId 
-  DatabasePublicSubnetRouteAssociation:
+      GatewayId: !GetAtt DbIGW.InternetGatewayId
+  DbPrivateRoute:
+    Type: AWS::EC2::Route 
+    Properties: 
+      RouteTableId: !Ref DbPrivateRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref DbNatGatway
+  DbPublicSubnet1RouteAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation 
     Properties: 
-      SubnetId: !GetAtt DatabasePublicSubnet.SubnetId 
-      RouteTableId: !GetAtt DatabaseRouteTable.RouteTableId
-  DatabaseWebDMZSecurityGroup:
+      SubnetId: !GetAtt DbPublicSubnet1.SubnetId 
+      RouteTableId: !GetAtt DbPublicRouteTable.RouteTableId
+  DbPublicSubnet2RouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation 
+    Properties: 
+      SubnetId: !GetAtt DbPublicSubnet2.SubnetId 
+      RouteTableId: !GetAtt DbPublicRouteTable.RouteTableId
+  DbPrivateSubnet1RouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation 
+    Properties: 
+      SubnetId: !Ref DbPrivateSubnet1
+      RouteTableId: !Ref DbPrivateRouteTable
+  DbPrivateSubnet2RouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation 
+    Properties: 
+      SubnetId: !Ref DbPrivateSubnet2 
+      RouteTableId: !Ref DbPrivateRouteTable 
+  DbEipNatGateway:
+    Type: AWS::EC2::EIP 
+    Properties:
+      Tags:
+        - Key: Name 
+          Value: "Db EIP"
+        - Key: stack 
+          Value: Db-stack
+  DbNatGatway: 
+    Type: AWS::EC2::NatGateway
+    Properties: 
+      AllocationId: !GetAtt DbEipNatGateway.AllocationId
+      ConnectivityType: "public"
+      SubnetId: !GetAtt DbPrivateSubnet1.SubnetId
+  DbWebDMZSecurityGroup:
     Type: AWS::EC2::SecurityGroup 
     Properties: 
-      GroupDescription: "Web DMZ for Database app port 80/22"
-      GroupName: "Web DMZ Database"
-      VpcId: !GetAtt DatabaseVPC.VpcId 
+      GroupDescription: "Web DMZ for Db app port 80/22"
+      GroupName: "Web DMZ Db"
+      VpcId: !GetAtt DbVPC.VpcId 
       SecurityGroupIngress:
         - IpProtocol: tcp 
           FromPort: 80 
@@ -77,12 +148,12 @@ Resources:
           FromPort: 22 
           ToPort: 22 
           CidrIp: 0.0.0.0/0 
-  DatabasePrivateSecurityGroup:
+  DbPrivateSecurityGroup:
     Type: AWS::EC2::SecurityGroup 
     Properties:
-      GroupDescription: "Database instance SG for Public to Private access"
-      GroupName: "Database Private SG"
-      VpcId: !GetAtt DatabaseVPC.VpcId
+      GroupDescription: "Db instance SG for Public to Private access"
+      GroupName: "Db Private SG"
+      VpcId: !GetAtt DbVPC.VpcId
       SecurityGroupIngress: 
       - IpProtocol: tcp
         FromPort: 22
@@ -92,3 +163,25 @@ Resources:
         FromPort: 5432
         ToPort: 5432
         CidrIp: 10.0.0.0/24 
+  DbPublicSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup 
+    Properties: 
+      DBSubnetGroupDescription: "Db Public subnet group"
+      DBSubnetGroupName: "Db public subnet group"
+      SubnetIds: 
+        - !GetAtt DbPublicSubnet1.SubnetId
+        - !GetAtt DbPublicSubnet2.SubnetId 
+      Tags:
+        - Key: stack 
+          Value: Db-stack
+  DbPrivateSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup 
+    Properties:
+      DBSubnetGroupDescription: "Db Private subnet group"
+      DBSubnetGroupName: "Db private subnet group"
+      SubnetIds:
+        - !Ref DbPrivateSubnet1 
+        - !Ref DbPrivateSubnet2
+      Tags: 
+        - Key: stack 
+          Value: Db-stack 
