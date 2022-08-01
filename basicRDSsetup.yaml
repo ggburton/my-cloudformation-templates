@@ -13,7 +13,7 @@ Resources:
   DbPublicSubnet1:
     Type: AWS::EC2::Subnet 
     Properties:
-      VpcId: !GetAtt DbVPC.VpcId
+      VpcId: !Ref DbVPC
       CidrBlock: "10.0.0.0/24"
       AvailabilityZone: 'us-east-1a'
       Tags:
@@ -24,7 +24,7 @@ Resources:
   DbPublicSubnet2:
     Type: AWS::EC2::Subnet 
     Properties:
-      VpcId: !GetAtt DbVPC.VpcId
+      VpcId: !Ref DbVPC
       CidrBlock: "10.0.2.0/24"
       AvailabilityZone: 'us-east-1b'
       Tags:
@@ -35,7 +35,7 @@ Resources:
   DbPrivateSubnet1:
     Type: AWS::EC2::Subnet 
     Properties: 
-      VpcId: !GetAtt DbVPC.VpcId 
+      VpcId: !Ref DbVPC 
       CidrBlock: "10.0.1.0/24"
       AvailabilityZone: 'us-east-1a'
       MapPublicIpOnLaunch: 'true'
@@ -47,7 +47,7 @@ Resources:
   DbPrivateSubnet2:
     Type: AWS::EC2::Subnet 
     Properties: 
-      VpcId: !GetAtt DbVPC.VpcId 
+      VpcId: !Ref DbVPC 
       CidrBlock: "10.0.3.0/24"
       AvailabilityZone: 'us-east-1b'
       MapPublicIpOnLaunch: 'true'
@@ -67,12 +67,12 @@ Resources:
   DbGatewayAttachement:
     Type: AWS::EC2::VPCGatewayAttachment 
     Properties:
-      InternetGatewayId: !GetAtt DbIGW.InternetGatewayId 
-      VpcId: !GetAtt DbVPC.VpcId
+      InternetGatewayId: !Ref DbIGW 
+      VpcId: !Ref DbVPC
   DbPublicRouteTable:
     Type: AWS::EC2::RouteTable 
     Properties:
-      VpcId: !GetAtt DbVPC.VpcId
+      VpcId: !Ref DbVPC
       Tags:
         - Key: Name 
           Value: DbPublicRouteTable 
@@ -90,9 +90,9 @@ Resources:
   DbPublicRoute:
     Type: AWS::EC2::Route 
     Properties:
-      RouteTableId: !GetAtt DbPublicRouteTable.RouteTableId
+      RouteTableId: !Ref DbPublicRouteTable
       DestinationCidrBlock: "0.0.0.0/0"
-      GatewayId: !GetAtt DbIGW.InternetGatewayId
+      GatewayId: !Ref DbIGW
   DbPrivateRoute:
     Type: AWS::EC2::Route 
     Properties: 
@@ -102,13 +102,13 @@ Resources:
   DbPublicSubnet1RouteAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation 
     Properties: 
-      SubnetId: !GetAtt DbPublicSubnet1.SubnetId 
-      RouteTableId: !GetAtt DbPublicRouteTable.RouteTableId
+      SubnetId: !Ref DbPublicSubnet1 
+      RouteTableId: !Ref DbPublicRouteTable
   DbPublicSubnet2RouteAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation 
     Properties: 
-      SubnetId: !GetAtt DbPublicSubnet2.SubnetId 
-      RouteTableId: !GetAtt DbPublicRouteTable.RouteTableId
+      SubnetId: !Ref DbPublicSubnet2 
+      RouteTableId: !Ref DbPublicRouteTable
   DbPrivateSubnet1RouteAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation 
     Properties: 
@@ -132,13 +132,13 @@ Resources:
     Properties: 
       AllocationId: !GetAtt DbEipNatGateway.AllocationId
       ConnectivityType: "public"
-      SubnetId: !GetAtt DbPrivateSubnet1.SubnetId
+      SubnetId: !Ref DbPrivateSubnet1
   DbWebDMZSecurityGroup:
     Type: AWS::EC2::SecurityGroup 
     Properties: 
       GroupDescription: "Web DMZ for Db app port 80/22"
       GroupName: "Web DMZ Db"
-      VpcId: !GetAtt DbVPC.VpcId 
+      VpcId: !Ref DbVPC 
       SecurityGroupIngress:
         - IpProtocol: tcp 
           FromPort: 80 
@@ -153,7 +153,7 @@ Resources:
     Properties:
       GroupDescription: "Db instance SG for Public to Private access"
       GroupName: "Db Private SG"
-      VpcId: !GetAtt DbVPC.VpcId
+      VpcId: !Ref DbVPC
       SecurityGroupIngress: 
       - IpProtocol: tcp
         FromPort: 22
@@ -169,8 +169,8 @@ Resources:
       DBSubnetGroupDescription: "Db Public subnet group"
       DBSubnetGroupName: "Db public subnet group"
       SubnetIds: 
-        - !GetAtt DbPublicSubnet1.SubnetId
-        - !GetAtt DbPublicSubnet2.SubnetId 
+        - !Ref DbPublicSubnet1
+        - !Ref DbPublicSubnet2 
       Tags:
         - Key: stack 
           Value: Db-stack
