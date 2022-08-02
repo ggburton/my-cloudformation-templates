@@ -7,10 +7,10 @@ These AWS Cloudformation templates are things I've been building to better under
 A Minimal deployment that creates a web server.... no HTTPS at this stage.
 
 
-## 2. basicRDSsetup.yaml
+## 2. multiAzRDSNetworkSetup.yaml
 
-This will eventually setup a 2 tier database lab for testing
+Create the network stack for a multi-AZ RDS instance.
 
-At the moment it only create a VPC, a private subnet and a public subnet.
+This creates 4 subnets; 2 public, 2 private and creates an private and public RDS subnetgroup.
 
-It then creates an internet gateway and connects it to the VPC.
+It also creates a NAT gateway in the private subnetgroup, so I can place an EC2 instance for testing.
