@@ -7,10 +7,9 @@ These AWS Cloudformation templates are things I've been building to better under
 A Minimal deployment that creates a web server.... no HTTPS at this stage.
 
 
-## 2. multiAzRDSNetworkSetup.yaml
+## 2. multiAzRDSSetup.yaml
 
-Create the network stack for a multi-AZ RDS instance.
+Creates a muti-AZ postgres RDS deployemnt using a new VPC with 4 subnets. 2 private and 2 public.
 
-This creates 4 subnets; 2 public, 2 private and creates an private and public RDS subnetgroup.
+This is a work in progress. still some hard coded values that need to be changed.
 
-It also creates a NAT gateway in the private subnetgroup, so I can place an EC2 instance for testing.

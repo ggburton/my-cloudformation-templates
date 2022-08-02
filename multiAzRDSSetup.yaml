@@ -1,3 +1,40 @@
+Parameters:
+  
+  DBInstanceSize:
+    Description: "The instance size of the database eg. db.m5.large"
+    Type: String
+    Default: "db.t3.micro"
+  
+  DBInstanceStorageSize:
+    Description: "Size in Gib for the database storage"
+    MinValue: 20
+    MaxValue: 65536
+    Type: Number 
+    Default: 20
+
+  DBInstanceStorageType:
+    Description: "Storage class of DB instance, can be standard, gp2 or io1"
+    Type: String 
+    Default: "gp2"
+
+  DBInstanceId:
+    Description: "A unique name for the RDS instance in the deployed region"
+    Type: String 
+    Default: "TestDBInstance"
+
+  DBInstanceName: 
+    Description: "The name of the postgres database"
+    Type: String 
+    Default: "TestDBInstance"
+
+  DBInstanceUsername:
+    Description: "The database username"
+    Type: String 
+
+  DBInstancePassword: 
+    Description: "The database password"
+    Type: String 
+  
 Resources:
 
   DbVPC:
@@ -170,7 +207,7 @@ Resources:
   DbPrivateSecurityGroup:
     Type: AWS::EC2::SecurityGroup 
     Properties:
-      GroupDescription: "Db instance SG for Public to Private access"
+      GroupDescription: "SSH and Postgres access"
       GroupName: "Db Private SG"
       VpcId: !Ref DbVPC
       SecurityGroupIngress: 
@@ -206,3 +243,18 @@ Resources:
       Tags: 
         - Key: stack 
           Value: !Sub AWS::StackName 
+
+  DBRdsInstance:
+    Type: AWS::RDS::DBInstance 
+    Properties:
+      Engine: postgres 
+      DBInstanceClass: !Ref DBInstanceSize
+      MultiAZ: 'true'
+      StorageType: !Ref DBInstanceStorageType
+      AllocatedStorage: !Ref DBInstanceStorageSize
+      DBInstanceIdentifier: !Ref DBInstanceId
+      DBName: !Ref DBInstanceName
+      MasterUsername: !Ref DBInstanceUsername 
+      MasterUserPassword: !Ref DBInstancePassword
+      DBSubnetGroupName: !Ref DbPublicSubnetGroup
+      PubliclyAccessible: 'true'
