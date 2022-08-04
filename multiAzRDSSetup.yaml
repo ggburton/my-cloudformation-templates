@@ -141,13 +141,6 @@ Resources:
       DestinationCidrBlock: "0.0.0.0/0"
       GatewayId: !Ref DbIGW
   
-  DbPrivateRoute:
-    Type: AWS::EC2::Route 
-    Properties: 
-      RouteTableId: !Ref DbPrivateRouteTable
-      DestinationCidrBlock: "0.0.0.0/0"
-      NatGatewayId: !Ref DbNatGatway
-  
   DbPublicSubnet1RouteAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation 
     Properties: 
@@ -241,7 +234,7 @@ Resources:
     Properties:
       Engine: postgres 
       DBInstanceClass: !Ref DBInstanceSize
-      MultiAZ: 'true'
+      MultiAZ: true
       StorageType: !Ref DBInstanceStorageType
       AllocatedStorage: !Ref DBInstanceStorageSize
       DBInstanceIdentifier: !Ref DBInstanceId
@@ -249,7 +242,7 @@ Resources:
       MasterUsername: !Ref DBInstanceUsername 
       MasterUserPassword: !Ref DBInstancePassword
       DBSubnetGroupName: !Ref DbPublicSubnetGroup
-      PubliclyAccessible: 'true'
+      PubliclyAccessible: true
       DBSecurityGroups: 
         - !Ref DbSecurityGroup
 
