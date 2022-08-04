@@ -165,38 +165,18 @@ Resources:
       SubnetId: !Ref DbPrivateSubnet2 
       RouteTableId: !Ref DbPrivateRouteTable 
    
-  DbWebDMZSecurityGroup:
+  DbPostgresSecurityGroup:
     Type: AWS::EC2::SecurityGroup 
     Properties: 
-      GroupDescription: "Web DMZ for Db app port 80/22"
+      GroupDescription: "Allow Inbound Postgres"
       GroupName: "Web DMZ Db"
       VpcId: !Ref DbVPC 
       SecurityGroupIngress:
         - IpProtocol: tcp 
-          FromPort: 80 
-          ToPort: 80 
+          FromPort: 5432
+          ToPort: 5432
           CidrIp: 0.0.0.0/0 
-        - IpProtocol: tcp 
-          FromPort: 22 
-          ToPort: 22 
-          CidrIp: 0.0.0.0/0 
-  
-  DbPrivateSecurityGroup:
-    Type: AWS::EC2::SecurityGroup 
-    Properties:
-      GroupDescription: "SSH and Postgres access"
-      GroupName: "DbPrivateSG"
-      VpcId: !Ref DbVPC
-      SecurityGroupIngress: 
-      - IpProtocol: tcp
-        FromPort: 22
-        ToPort: 22 
-        CidrIp: 10.0.0.0/24
-      - IpProtocol: tcp 
-        FromPort: 5432
-        ToPort: 5432
-        CidrIp: 10.0.0.0/24 
-  
+   
   DbPublicSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup 
     Properties: 
@@ -243,11 +223,8 @@ Resources:
       MasterUserPassword: !Ref DBInstancePassword
       DBSubnetGroupName: !Ref DbPublicSubnetGroup
       PubliclyAccessible: true
-      DBSecurityGroups: 
-        - !Ref DbSecurityGroup
-
-
-
+      VPCSecurityGroups: 
+        - !Ref DbPostgresSecurityGroup
 
 Outputs: 
   DbURI: 
