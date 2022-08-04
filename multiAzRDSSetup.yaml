@@ -171,23 +171,7 @@ Resources:
     Properties: 
       SubnetId: !Ref DbPrivateSubnet2 
       RouteTableId: !Ref DbPrivateRouteTable 
-  
-  DbEipNatGateway:
-    Type: AWS::EC2::EIP 
-    Properties:
-      Tags:
-        - Key: Name 
-          Value: "Db EIP"
-        - Key: stack 
-          Value: !Sub AWS::StackName
-  
-  DbNatGatway: 
-    Type: AWS::EC2::NatGateway
-    Properties: 
-      AllocationId: !GetAtt DbEipNatGateway.AllocationId
-      ConnectivityType: "public"
-      SubnetId: !Ref DbPrivateSubnet1
-  
+   
   DbWebDMZSecurityGroup:
     Type: AWS::EC2::SecurityGroup 
     Properties: 
@@ -208,7 +192,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup 
     Properties:
       GroupDescription: "SSH and Postgres access"
-      GroupName: "Db Private SG"
+      GroupName: "DbPrivateSG"
       VpcId: !Ref DbVPC
       SecurityGroupIngress: 
       - IpProtocol: tcp
@@ -231,7 +215,7 @@ Resources:
       Tags:
         - Key: stack 
           Value: !Sub AWS::StackName
-  
+
   DbPrivateSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup 
     Properties:
@@ -244,7 +228,15 @@ Resources:
         - Key: stack 
           Value: !Sub AWS::StackName 
 
-  DBRdsInstance:
+  DbSecurityGroup:
+    Type: AWS::RDS::DBSecurityGroup 
+    Properties: 
+      EC2VpcId: !Ref DbVPC
+      GroupDescription: "postgres db ingress from external ip"
+      DBSecurityGroupIngress: 
+        - CIDRIP: "0.0.0.0/0"
+
+  DbRdsInstance:
     Type: AWS::RDS::DBInstance 
     Properties:
       Engine: postgres 
@@ -258,3 +250,13 @@ Resources:
       MasterUserPassword: !Ref DBInstancePassword
       DBSubnetGroupName: !Ref DbPublicSubnetGroup
       PubliclyAccessible: 'true'
+      DBSecurityGroups: 
+        - !Ref DbSecurityGroup
+
+
+
+
+Outputs: 
+  DbURI: 
+    Description: "The URI endpoint for the DB instance"
+    Value: !GetAtt DbRdsInstance.Endpoint.Address
