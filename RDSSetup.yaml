@@ -17,6 +17,19 @@ Parameters:
     Type: String 
     Default: "gp2"
 
+  DBInstanceStorageEncrypted:
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: "Is the data to be encrypted at rest true or false"
+    Type: String
+    Default: "false" 
+
+  DBInstanceBackupRetentionPeriod:
+    Description: "The backup retention period in days"
+    Type: Number 
+    Default: 1
+
   DBInstanceId:
     Description: "A unique name for the RDS instance in the deployed region"
     Type: String 
@@ -34,10 +47,44 @@ Parameters:
   DBInstancePassword: 
     Description: "The database password"
     Type: String 
-  
+
+  DBInstanceMultiAz:
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: "Is this a MultiAz deployment true or false"
+    Type: String
+    Default: "true"
+
+  DBInstancePubliclyAccessible:
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: "Is this a publicaly accessable B true of false"
+    Type: String
+    Default: "true" 
+
+  DBInstancePreferredBackupWindow:
+    Description: "The time of day the backup is to occur: must be in format hh24:mi-hh24:mi"
+    Type: String
+    Default: "00:00-01:00"
+
+  DBInstanceAutoMinorVersionUpgrade:
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: "Allow AWS to automatically upgrade minor postgres version true or false"
+    Type: String 
+    Default: "true"
+
+  DBInstancePrerredMaintenacneWindow:
+    Description: "The preffered time for DB maintance such as minor postgres upgrades format ddd:hh24:mi-ddd:hh24:mi"
+    Type: String 
+    Default: "Sun:23:00-Sun:23:59"
+
 Resources:
 
-  DbVPC:
+  DBVPC:
     Type: AWS::EC2::VPC
     Properties: 
       CidrBlock: "10.0.0.0/16"
@@ -49,184 +96,189 @@ Resources:
         - Key: Name 
           Value: "DB-VPC"
 
-  DbPublicSubnet1:
+  DBPublicSubnet1:
     Type: AWS::EC2::Subnet 
     Properties:
-      VpcId: !Ref DbVPC
+      VpcId: !Ref DBVPC
       CidrBlock: "10.0.0.0/24"
       AvailabilityZone: !Sub "${AWS::Region}a" # e.g us-east-1a
       Tags:
         - Key: Name 
-          Value: "Public Db 10.0.0.0/24"
+          Value: "Public DB 10.0.0.0/24"
         - Key: stack 
           Value: !Sub AWS::StackName 
   
-  DbPublicSubnet2:
+  DBPublicSubnet2:
     Type: AWS::EC2::Subnet 
     Properties:
-      VpcId: !Ref DbVPC
+      VpcId: !Ref DBVPC
       CidrBlock: "10.0.2.0/24"
       AvailabilityZone: !Sub "${AWS::Region}b" # e.g us-east-1b 
       Tags:
         - Key: Name 
-          Value: "Public Db 10.0.2.0/24"
+          Value: "Public DB 10.0.2.0/24"
         - Key: stack 
           Value: !Sub AWS::StackName
   
-  DbPrivateSubnet1:
+  DBPrivateSubnet1:
     Type: AWS::EC2::Subnet 
     Properties: 
-      VpcId: !Ref DbVPC 
+      VpcId: !Ref DBVPC 
       CidrBlock: "10.0.1.0/24"
       AvailabilityZone: !Sub "${AWS::Region}a" # e.g us-east-1a
       MapPublicIpOnLaunch: 'true'
       Tags:
         - Key: Name
-          Value: "Private Db 10.0.1.0/24"
+          Value: "Private DB 10.0.1.0/24"
         - Key: stack 
           Value: !Sub AWS::StackName
   
-  DbPrivateSubnet2:
+  DBPrivateSubnet2:
     Type: AWS::EC2::Subnet 
     Properties: 
-      VpcId: !Ref DbVPC 
+      VpcId: !Ref DBVPC 
       CidrBlock: "10.0.3.0/24"
       AvailabilityZone: !Sub "${AWS::Region}b" # e.g us-east-1b
       MapPublicIpOnLaunch: 'true'
       Tags:
         - Key: Name
-          Value: "Private Db 10.0.3.0/24"
+          Value: "Private DB 10.0.3.0/24"
         - Key: stack 
           Value: !Sub AWS::StackName 
   
-  DbIGW:
+  DBIGW:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: stack 
           Value: !Sub AWS::StackName
         - Key: Name 
-          Value: Db-IGW
+          Value: DB-IGW
   
-  DbGatewayAttachement:
+  DBGatewayAttachement:
     Type: AWS::EC2::VPCGatewayAttachment 
     Properties:
-      InternetGatewayId: !Ref DbIGW 
-      VpcId: !Ref DbVPC
+      InternetGatewayId: !Ref DBIGW 
+      VpcId: !Ref DBVPC
   
-  DbPublicRouteTable:
+  DBPublicRouteTable:
     Type: AWS::EC2::RouteTable 
     Properties:
-      VpcId: !Ref DbVPC
+      VpcId: !Ref DBVPC
       Tags:
         - Key: Name 
-          Value: DbPublicRouteTable 
+          Value: DBPublicRouteTable 
         - Key: stack 
           Value: !Sub AWS::StackName
   
-  DbPrivateRouteTable:
+  DBPrivateRouteTable:
     Type: AWS::EC2::RouteTable 
     Properties: 
-      VpcId: !Ref DbVPC
+      VpcId: !Ref DBVPC
       Tags:
         - Key: Name 
-          Value: DbPrivateRouteTable 
+          Value: DBPrivateRouteTable 
         - Key: stack 
           Value: !Sub AWS::StackName 
   
-  DbPublicRoute:
+  DBPublicRoute:
     Type: AWS::EC2::Route 
     Properties:
-      RouteTableId: !Ref DbPublicRouteTable
+      RouteTableId: !Ref DBPublicRouteTable
       DestinationCidrBlock: "0.0.0.0/0"
-      GatewayId: !Ref DbIGW
+      GatewayId: !Ref DBIGW
   
-  DbPublicSubnet1RouteAssociation:
+  DBPublicSubnet1RouteAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation 
     Properties: 
-      SubnetId: !Ref DbPublicSubnet1 
-      RouteTableId: !Ref DbPublicRouteTable
+      SubnetId: !Ref DBPublicSubnet1 
+      RouteTableId: !Ref DBPublicRouteTable
   
-  DbPublicSubnet2RouteAssociation:
+  DBPublicSubnet2RouteAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation 
     Properties: 
-      SubnetId: !Ref DbPublicSubnet2 
-      RouteTableId: !Ref DbPublicRouteTable
+      SubnetId: !Ref DBPublicSubnet2 
+      RouteTableId: !Ref DBPublicRouteTable
   
-  DbPrivateSubnet1RouteAssociation:
+  DBPrivateSubnet1RouteAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation 
     Properties: 
-      SubnetId: !Ref DbPrivateSubnet1
-      RouteTableId: !Ref DbPrivateRouteTable
+      SubnetId: !Ref DBPrivateSubnet1
+      RouteTableId: !Ref DBPrivateRouteTable
   
-  DbPrivateSubnet2RouteAssociation:
+  DBPrivateSubnet2RouteAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation 
     Properties: 
-      SubnetId: !Ref DbPrivateSubnet2 
-      RouteTableId: !Ref DbPrivateRouteTable 
+      SubnetId: !Ref DBPrivateSubnet2 
+      RouteTableId: !Ref DBPrivateRouteTable 
    
-  DbPostgresSecurityGroup:
+  DBPostgresSecurityGroup:
     Type: AWS::EC2::SecurityGroup 
     Properties: 
       GroupDescription: "Allow Inbound Postgres"
-      GroupName: "Web DMZ Db"
-      VpcId: !Ref DbVPC 
+      GroupName: "Web DMZ DB"
+      VpcId: !Ref DBVPC 
       SecurityGroupIngress:
         - IpProtocol: tcp 
           FromPort: 5432
           ToPort: 5432
           CidrIp: 0.0.0.0/0 
    
-  DbPublicSubnetGroup:
+  DBPublicSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup 
-    Properties: 
-      DBSubnetGroupDescription: "Db Public subnet group"
-      DBSubnetGroupName: "Db public subnet group"
+    Properties:
+      DBSubnetGroupDescription: "DB Public subnet group"
+      DBSubnetGroupName: "DB public subnet group"
       SubnetIds: 
-        - !Ref DbPublicSubnet1
-        - !Ref DbPublicSubnet2 
+        - !Ref DBPublicSubnet1
+        - !Ref DBPublicSubnet2 
       Tags:
         - Key: stack 
           Value: !Sub AWS::StackName
 
-  DbPrivateSubnetGroup:
+  DBPrivateSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup 
     Properties:
-      DBSubnetGroupDescription: "Db Private subnet group"
-      DBSubnetGroupName: "Db private subnet group"
+      DBSubnetGroupDescription: "DB Private subnet group"
+      DBSubnetGroupName: "DB private subnet group"
       SubnetIds:
-        - !Ref DbPrivateSubnet1 
-        - !Ref DbPrivateSubnet2
+        - !Ref DBPrivateSubnet1 
+        - !Ref DBPrivateSubnet2
       Tags: 
         - Key: stack 
           Value: !Sub AWS::StackName 
 
-  DbSecurityGroup:
+  DBSecurityGroup:
     Type: AWS::RDS::DBSecurityGroup 
     Properties: 
-      EC2VpcId: !Ref DbVPC
-      GroupDescription: "postgres db ingress from external ip"
+      EC2VpcId: !Ref DBVPC
+      GroupDescription: "postgres DB ingress from external ip"
       DBSecurityGroupIngress: 
         - CIDRIP: "0.0.0.0/0"
 
-  DbRdsInstance:
+  DBRdsInstance:
     Type: AWS::RDS::DBInstance 
     Properties:
       Engine: postgres 
       DBInstanceClass: !Ref DBInstanceSize
-      MultiAZ: true
+      MultiAZ: !Ref DBInstanceMultiAz
       StorageType: !Ref DBInstanceStorageType
       AllocatedStorage: !Ref DBInstanceStorageSize
       DBInstanceIdentifier: !Ref DBInstanceId
       DBName: !Ref DBInstanceName
       MasterUsername: !Ref DBInstanceUsername 
       MasterUserPassword: !Ref DBInstancePassword
-      DBSubnetGroupName: !Ref DbPublicSubnetGroup
-      PubliclyAccessible: true
+      DBSubnetGroupName: !Ref DBPublicSubnetGroup
+      PubliclyAccessible: !Ref DBInstancePubliclyAccessible
       VPCSecurityGroups: 
-        - !Ref DbPostgresSecurityGroup
+        - !Ref DBPostgresSecurityGroup
+      BackupRetentionPeriod: !Ref DBInstanceBackupRetentionPeriod
+      StorageEncrypted: !Ref DBInstanceStorageEncrypted
+      AutoMinorVersionUpgrade: !Ref DBInstanceAutoMinorVersionUpgrade
+      PreferredBackupWindow: !Ref DBInstancePreferredBackupWindow
+      PreferredMaintenanceWindow: !Ref DBInstancePrerredMaintenacneWindow
 
 Outputs: 
-  DbURI: 
+  DBURI: 
     Description: "The URI endpoint for the DB instance"
-    Value: !GetAtt DbRdsInstance.Endpoint.Address
+    Value: !GetAtt DBRdsInstance.Endpoint.Address

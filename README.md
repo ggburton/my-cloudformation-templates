@@ -7,9 +7,8 @@ These AWS Cloudformation templates are things I've been building to better under
 A Minimal deployment that creates a web server.... no HTTPS at this stage.
 
 
-## 2. multiAzRDSSetup.yaml
+## 2. RDSSetup.yaml
 
-Creates a muti-AZ postgres RDS deployemnt using a new VPC with 4 subnets. 2 private and 2 public.
+By default this Creates a publicaly accessible muti-AZ postgres RDS deployemnt and the assocciated VPC and Subnet network infrastructure for it to work.
 
-This is a work in progress. still some hard coded values that need to be changed.
-
+It contains paramaters for single instance and private access as well.
