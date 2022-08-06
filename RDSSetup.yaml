@@ -277,6 +277,9 @@ Resources:
       AutoMinorVersionUpgrade: !Ref DBInstanceAutoMinorVersionUpgrade
       PreferredBackupWindow: !Ref DBInstancePreferredBackupWindow
       PreferredMaintenanceWindow: !Ref DBInstancePrerredMaintenacneWindow
+      EnableCloudwatchLogsExports:
+        - "postgresql"
+        - "upgrade"
 
 Outputs: 
   DBURI: 
