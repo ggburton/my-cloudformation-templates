@@ -1,4 +1,12 @@
 Parameters:
+
+  CreateReadReplica:
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: "Create a read replica database"
+    Type: String 
+    Default: "false"
   
   DBInstanceSize:
     Description: "The instance size of the database eg. db.m5.large"
@@ -81,6 +89,12 @@ Parameters:
     Description: "The preffered time for DB maintance such as minor postgres upgrades format ddd:hh24:mi-ddd:hh24:mi"
     Type: String 
     Default: "Sun:23:00-Sun:23:59"
+
+Conditions: 
+
+  CreateReadReplicaResource: !Equals
+    - !Ref CreateReadReplica
+    - "true"
 
 Resources:
 
@@ -281,7 +295,21 @@ Resources:
         - "postgresql"
         - "upgrade"
 
+  DBRdsReadReplica: 
+    Type: AWS::RDS::DBInstance
+    Condition: CreateReadReplicaResource 
+    Properties:
+      SourceDBInstanceIdentifier: !Ref DBRdsInstance
+      DBInstanceClass: !Ref DBInstanceSize
+      StorageType: !Ref DBInstanceStorageType # otherwise RR uses magnetic disk!!
+
+
 Outputs: 
   DBURI: 
     Description: "The URI endpoint for the DB instance"
     Value: !GetAtt DBRdsInstance.Endpoint.Address
+
+  ReadReplicaURI:
+    Condition: CreateReadReplicaResource 
+    Description: "The read replica endpoint"
+    Value: !GetAtt DBRdsReadReplica.Endpoint.Address 
